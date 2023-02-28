@@ -125,6 +125,41 @@ class UpdateDatastoreSerializer(serializers.ModelSerializer):
 		fields=("description","connection_params")
 
 
+"""
+LayerGroup Serialziers
+"""
+
+class GetLayerGroupSerializer(serializers.ModelSerializer):
+
+	class Meta:
+		model=LayerGroup
+		fields=('id','server_id','name','title','visible','cached')
+		read_only_fields=fields
+
+
+class PostLayerGroupSerializer(serializers.ModelSerializer):
+	class Meta:
+		model=LayerGroup
+		fields=('server_id','name','title','visible','cached')
+
+	def validate(self,validated_data):
+		if "server_id" not in validated_data or validated_data["server_id"]=="":
+			raise serializers.ValidationError("server_id cannot be empty")
+		if "name" not in validated_data or validated_data["name"]=="":
+			raise serializers.ValidationError("name cannot be empty")
+		if "visible" not in validated_data or validated_data["visible"]=="":
+			raise serializers.ValidationError("visible cannot be empty")
+		if "cached" not in validated_data or validated_data["cached"]=="":
+			raise serializers.ValidationError("cached cannot be empty")
+
+		return validated_data
+
+
+class UpdateLayerGroupSerializer(serializers.ModelSerializer):
+	class Meta:
+		model=LayerGroup
+		fields=('server_id','name','title','visible','cached')
+
 
 
 
@@ -139,8 +174,8 @@ class GetLayerSerializer(serializers.ModelSerializer):
 		fields=("id","external","external_params","datastore","layer_group","name","title",\
 			"abstract","type","public","visible","queryable","cached","single_image","vector_tile",\
 			"allow_download","order","created_by","thumbnail","timeout","native_srs","native_extent",\
-			"latlong_extent","source_name")
-		read_only_fields=fields
+			"latlong_extent","source_name","get_ol_params")
+		# read_only_fields=fields
 
 
 class PostLayerSerializer(serializers.ModelSerializer):

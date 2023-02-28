@@ -4,7 +4,8 @@ from .models import SHP,Server,Workspace,Datastore,LayerGroup,Layer
 from .serializers import PostShpSerializer,GetServerSerializer,PostServerSerializer,UpdateServerSerializer,\
 GetWorkspaceSerializer,PostWorkspaceSerializer,UpdateWorkspaceSerializer,GetDatastoreSerializer,\
 PostDatastoreSerializer,UpdateDatastoreSerializer,GetLayerSerializer,PostLayerSerializer,\
-UpdateLayerSerializer,GetGsLayerSerializer
+UpdateLayerSerializer,GetGsLayerSerializer,GetLayerGroupSerializer,PostLayerGroupSerializer,\
+UpdateLayerGroupSerializer
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework import permissions,mixins
@@ -99,7 +100,7 @@ class GetServerList(APIView):
 	# permission_classes=[permissions.IsAuthenticated]
 	
 	def get(self,request,*args,**kwargs):
-		server=Server.objects.values()
+		server=Server.objects.all()
 		data=GetServerSerializer(server,many=True).data
 
 		if data:
@@ -240,7 +241,7 @@ class GetWorkspaceList(APIView):
 	# permission_classes=[permissions.IsAuthenticated]
 	
 	def get(self,request,*args,**kwargs):
-		workspace=Workspace.objects.values()
+		workspace=Workspace.objects.all()
 		data=GetWorkspaceSerializer(workspace,many=True).data
 
 		if data:
@@ -399,7 +400,7 @@ class GetDatastoreList(APIView):
 	# permission_classes=[permissions.IsAuthenticated]
 	
 	def get(self,request,*args,**kwargs):
-		datastore=Datastore.objects.values()
+		datastore=Datastore.objects.all()
 		# datastore.connection_params["passwd"]="****"
 		data=GetDatastoreSerializer(datastore,many=True).data
 
@@ -544,6 +545,157 @@ class DeleteDatastore(APIView):
 
 
 
+"""
+LayerGroup Api's
+"""
+
+class GetLayerGroupList(APIView):
+	# permission_classes=[permissions.IsAuthenticated]
+	
+	def get(self,request,*args,**kwargs):
+		layergroup=LayerGroup.objects.all()
+		data=GetLayerGroupSerializer(layergroup,many=True).data
+
+		if data:
+			return Response({
+			"message":"data fetched successfully",
+			"status":"success",
+			"data":data
+			})
+		return Response({
+			"message":"there is no layergroup data avialable",
+			"status":"error",
+			"data":data
+			})
+
+
+class PostLayerGroupApi(generics.GenericAPIView):
+	# permission_classes=[permissions.IsAuthenticated]
+	serializer_class=PostLayerGroupSerializer
+	parser_classes=[MultiPartParser]
+
+	def post(self,request,*args,**kwargs):
+		serializer=self.get_serializer(data=request.data)
+		if serializer.is_valid():
+			try:
+				Server.objects.get(pk=serializer.validated_data["server_id"])
+			except Server.DoesNotExist as e:
+				return Response({
+					"message":"Enter proper server id",
+					"status":"error"
+					})
+			layergroup=serializer.save()
+			data=GetLayerSerializer(layergroup,context=self.get_serializer_context()).data
+			return Response({
+				"message":"layergroup data saved successfully",
+				"status":"success",
+				"data":data
+				})
+		return Response({
+			"message":"layergroup data not saved",
+			"status":"error",
+			"error":serializer.errors
+			})
+
+
+class UpdateLayerGroupApi(generics.GenericAPIView):
+	# permission_classes=[permissions.IsAuthenticated]
+	serializer_class=UpdateLayerGroupSerializer
+	parser_classes=[MultiPartParser]
+
+	def put(self,request,id,*args,**kwargs):
+		try:
+			instance=LayerGroup.objects.get(pk=id)
+		except LayerGroup.DoesNotExist as e:
+			return Response({
+				"message":"layer with id %s does not exists"%(id),
+				"status":"error"
+				})
+		serializer=self.get_serializer(data=request.data,instance=instance)
+
+		if serializer.is_valid():
+			layergroup=serializer.save()
+			data=GetLayerGroupSerializer(layergroup,context=self.get_serializer_context()).data
+
+			return Response({
+				"message":"layergroup updated successfully",
+				"status":"success",
+				"data":data
+				})
+		return Response({
+			"message":"layergroup not updated",
+			"status":"error",
+			"error":serializer.errors
+			})
+	def patch(self,request,id,*args,**kwargs):
+		try:
+			instance=LayerGroup.objects.get(pk=id)
+		except LayerGroup.DoesNotExist as e:
+			return Response({
+				"message":"layergroup with id %s does not exists"%(id),
+				"status":"error"
+				})
+		serializer=self.get_serializer(data=request.data,instance=instance,partial=True)
+
+		if serializer.is_valid():
+			layergroup=serializer.save()
+			data=GetLayerGroupSerializer(layergroup,context=self.get_serializer_context()).data
+
+			return Response({
+				"message":"layergroup updated successfully",
+				"status":"success",
+				"data":data
+				})
+		return Response({
+			"message":"layergroup not updated",
+			"status":"error",
+			"error":serializer.errors
+			})
+
+class GetLayerGroup(APIView):
+	# permission_classes=[permissions.IsAuthenticated]
+
+	def get(self,request,id,*args,**kwargs):
+
+		try:
+			instance=LayerGroup.objects.get(pk=id)
+		except LayerGroup.DoesNotExist as e:
+			return Response({
+				"message":"layergroup with id %s does not exists"%(id),
+				"status":"error"
+				})
+		# print(instance.get_ol_params())
+
+		data=GetLayerGroupSerializer(instance).data
+
+		return Response({
+			"message":"layergroup data fetched successfully",
+			"status":"success",
+			"data":data
+			})
+
+
+class DeleteLayerGroup(APIView):
+	# permission_classes=[permissions.IsAuthenticated]
+
+	def delete(self,request,id,*args,**kwargs):
+		try:
+			instance=LayerGroup.objects.get(pk=id)
+		except LayerGroup.DoesNotExist as e:
+			return Response({
+				"message":"layergroup with id %s does not exists"%(id),
+				"status":"error"
+				})
+		instance.delete()
+
+		return Response({
+			"message":"layergroup data deleted successfully",
+			"status":"success"
+			},status=status.HTTP_200_OK)
+
+
+
+
 
 
 """
@@ -554,7 +706,8 @@ class GetLayerList(APIView):
 	# permission_classes=[permissions.IsAuthenticated]
 	
 	def get(self,request,*args,**kwargs):
-		layer=Layer.objects.values()
+		layer=Layer.objects.all()
+		print(layer)
 		data=GetLayerSerializer(layer,many=True).data
 
 		if data:
@@ -653,11 +806,13 @@ class GetLayer(APIView):
 
 		try:
 			instance=Layer.objects.get(pk=id)
+			print(instance)
 		except Layer.DoesNotExist as e:
 			return Response({
 				"message":"layer with id %s does not exists"%(id),
 				"status":"error"
 				})
+		# print(instance.get_ol_params())
 
 		data=GetLayerSerializer(instance).data
 

@@ -4,6 +4,8 @@ from django.conf import settings
 from .backend_postgis import Introspect
 from django.utils.crypto import get_random_string
 
+from .backend_geoserver import Geoserver
+
 # Create your models here.
 
 CLONE_PERMISSION_CLONE = "clone"
@@ -174,49 +176,71 @@ class LayerGroup(models.Model):
 		return new_instance
 
 
-class Layer(models.Model):
-    external = models.BooleanField(default=False)
-    external_params = models.TextField(null=True, blank=True)
-    datastore = models.ForeignKey(Datastore, null=True, on_delete=models.CASCADE)
-    layer_group = models.ForeignKey(LayerGroup, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-    title = models.CharField(max_length=150)
-    abstract = models.CharField(max_length=5000, null=True, blank=True)
-    type = models.CharField(max_length=150)
-    public = models.BooleanField(default=False) # the layer can be read by anyone, even anonymous users
-    visible = models.BooleanField(default=True)
-    queryable = models.BooleanField(default=True)
-    cached = models.BooleanField(default=False)
-    single_image = models.BooleanField(default=False)
-    vector_tile = models.BooleanField(default=False)
-    allow_download = models.BooleanField(default=True)
-    order = models.IntegerField(default=100)
-    created_by = models.CharField(max_length=100)
-    thumbnail = models.ImageField(upload_to='thumbnails', null=True, blank=True)
-    # conf = models.TextField(null=True, blank=True)
-    timeout = models.IntegerField(null=True, default=30000)
-    native_srs = models.CharField(max_length=100, default='EPSG:4326')
-    native_extent = models.CharField(max_length=250, default='-180,-90,180,90')
-    latlong_extent = models.CharField(max_length=250, default='-180,-90,180,90')
-    source_name = models.TextField(null=True, blank=True) # table name for postgis layers, not defined for the rest
+class Layer(models.Model): #needed to be fix
+	external = models.BooleanField(default=False)
+	external_params = models.TextField(null=True, blank=True)
+	datastore = models.ForeignKey(Datastore, null=True, on_delete=models.CASCADE)
+	layer_group = models.ForeignKey(LayerGroup, on_delete=models.CASCADE)
+	name = models.CharField(max_length=100)
+	title = models.CharField(max_length=150)
+	abstract = models.CharField(max_length=5000, null=True, blank=True)
+	type = models.CharField(max_length=150)
+	public = models.BooleanField(default=False) # the layer can be read by anyone, even anonymous users
+	visible = models.BooleanField(default=True)
+	queryable = models.BooleanField(default=True)
+	cached = models.BooleanField(default=False)
+	single_image = models.BooleanField(default=False)
+	vector_tile = models.BooleanField(default=False)
+	allow_download = models.BooleanField(default=True)
+	order = models.IntegerField(default=100)
+	created_by = models.CharField(max_length=100)
+	thumbnail = models.ImageField(upload_to='thumbnails', null=True, blank=True)
+	# conf = models.TextField(null=True, blank=True)
+	timeout = models.IntegerField(null=True, default=30000)
+	native_srs = models.CharField(max_length=100, default='EPSG:4326')
+	native_extent = models.CharField(max_length=250, default='-180,-90,180,90')
+	latlong_extent = models.CharField(max_length=250, default='-180,-90,180,90')
+	source_name = models.TextField(null=True, blank=True) # table name for postgis layers, not defined for the rest
     
-    def __str__(self):
-        return self.name
+	def __str__(self):
+		return self.name
     
-    def get_qualified_name(self):
-        return self.datastore.workspace.name + ":" + self.name
+	def get_qualified_name(self):
+		return self.datastore.workspace.name + ":" + self.name
     
-    def clone(self, target_datastore, recursive=True, layer_group=None, copy_data=True, permissions=CLONE_PERMISSION_CLONE):
-        # from gvsigol_services.utils import clone_layer
-        # return clone_layer(target_datastore, self, layer_group, copy_data=copy_data, permissions=permissions)
-        obj=Layer.objects.get(pk=self.pk)
-        self.pk=None
-        obj.save()
+	def clone(self, target_datastore, recursive=True, layer_group=None, copy_data=True, permissions=CLONE_PERMISSION_CLONE):
+		# from gvsigol_services.utils import clone_layer
+		# return clone_layer(target_datastore, self, layer_group, copy_data=copy_data, permissions=permissions)
+		obj=Layer.objects.get(pk=self.pk)
+		self.pk=None
+		obj.save()
     
-    # def get_config_manager(self):
-    #     return LayerConfig(self)
+	# def get_config_manager(self):
+	#     return LayerConfig(self)
 
-    def get_db_connection(self):
-        i, params = self.datastore.get_db_connection()
-        return i, self.source_name, params.get('schema', 'public')
+	def get_db_connection(self):
+		i, params = self.datastore.get_db_connection()
+		return i, self.source_name, params.get('schema', 'public')
 
+	@property
+	def get_ol_params(self):
+		obj={}
+		obj_inner={}
+		# print(self.datastore.workspace.server)
+		server=self.datastore.workspace.server
+		# gs=geographic_servers.get_instance().get_server_by_id(server_id)
+		gs=Geoserver(server.id,server.default,server.name,server.user,server.password,server.frontend_url)
+		layer_name=f"{self.datastore.workspace.name}:{self.name}"
+		lyr=gs.getGsLayer(layer_name)
+		obj["extent"]=list(lyr.resource.native_bbox)[:-1]
+		obj["url"]=server.frontend_url+"/wms"
+		obj["srs"]=lyr.resource.projection
+		# obj["params"]["LAYERS"]=layer_name
+		# obj["params"]["STYLES"]=lyr._get_default_style()
+		# obj["params"]["TILED"]=False
+		obj_inner["LAYERS"]=layer_name
+		obj_inner["STYLES"]=f"{lyr._get_default_style()}"
+		obj_inner["TILED"]=False
+		obj["params"]=obj_inner
+
+		return obj

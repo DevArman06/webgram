@@ -31,16 +31,16 @@ supported_srs_plain = [ x[0] for x in supported_srs ]
 supported_encodings_plain = [ x[0] for x in supported_encodings ]
 
 
-class Geoserver():
+class Geoserver(): #need to fixed
 
-    def __init__(self,id,default,name,user,password,master_node,slave_node):
+    def __init__(self,id,default,name,user,password,master_node):
         self.id = id
         self.default = default
         self.name = name
         self.conf_url = master_node
         self.rest_url = master_node + "/rest"
         self.gwc_url = master_node + "gwc/rest"
-        self.slave_node = slave_node
+        # self.slave_node = slave_node
         # self.rest_catalog = rest_geoserver.Geoserver(self.rest_url, self.gwc_url)
         self.user = user
         self.password=password
@@ -67,6 +67,11 @@ class Geoserver():
         # print(resource[10].title,resource[10].native_name,resource[10].native_bbox)
         # print(resource[15].title,resource[15].native_name,resource[15].native_bbox)
         layer_data=catalog.get_layers()
+        return layer_data
+
+    def getGsLayer(self,layer_name):
+        catalog=self.getGsconfig()
+        layer_data=catalog.get_layer(name=layer_name)
         return layer_data
 
 

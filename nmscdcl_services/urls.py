@@ -34,6 +34,14 @@ urlpatterns=[
 	path("DeleteLayer/<int:id>/",service_view.DeleteLayer.as_view(),name="DeleteLayer"),
 
 
+	#Layer Group Urls
+	path("GetLayerGroupList",service_view.GetLayerGroupList.as_view(),name="GetLayerGroupList"),
+	path("PostLayerGroupApi",service_view.PostLayerGroupApi.as_view(),name="PostLayerGroupApi"),
+	path("UpdateLayerGroupApi/<int:id>/",service_view.UpdateLayerGroupApi.as_view(),name="UpdateLayerGroupApi"),
+	path("GetLayerGroup/<int:id>/",service_view.GetLayerGroup.as_view(),name="GetLayerGroup"),
+	path("DeleteLayerGroup/<int:id>/",service_view.DeleteLayerGroup.as_view(),name="DeleteLayerGroup"),
+
+
 	#Gs Layers
 	path("GetGsLayerList",service_view.GetGsLayerList.as_view(),name="GetGsLayerList"),
 ]
