@@ -5,7 +5,7 @@ from .serializers import PostShpSerializer,GetServerSerializer,PostServerSeriali
 GetWorkspaceSerializer,PostWorkspaceSerializer,UpdateWorkspaceSerializer,GetDatastoreSerializer,\
 PostDatastoreSerializer,UpdateDatastoreSerializer,GetLayerSerializer,PostLayerSerializer,\
 UpdateLayerSerializer,GetGsLayerSerializer,GetLayerGroupSerializer,PostLayerGroupSerializer,\
-UpdateLayerGroupSerializer
+UpdateLayerGroupSerializer,GetShortLayerSerializer
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework import permissions,mixins
@@ -702,13 +702,32 @@ class DeleteLayerGroup(APIView):
 Layer Api's
 """
 
-class GetLayerList(APIView):
+class GetDetailedLayerList(APIView):
 	# permission_classes=[permissions.IsAuthenticated]
 	
 	def get(self,request,*args,**kwargs):
 		layer=Layer.objects.all()
-		print(layer)
 		data=GetLayerSerializer(layer,many=True).data
+
+		if data:
+			return Response({
+			"message":"data fetched successfully",
+			"status":"success",
+			"data":data
+			})
+		return Response({
+			"message":"there is no layer data avialable",
+			"status":"error",
+			"data":data
+			})
+
+
+class GetLayerList(APIView):
+	# permission_classes=[permissions.IsAuthenticated]
+	
+	def get(self,request,*args,**kwargs):
+		layer=Layer.objects.values("id","name")
+		data=GetShortLayerSerializer(layer,many=True).data
 
 		if data:
 			return Response({

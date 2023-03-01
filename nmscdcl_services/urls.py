@@ -28,6 +28,7 @@ urlpatterns=[
 
 	#Layer Urls
 	path("GetLayerList",service_view.GetLayerList.as_view(),name="GetLayerList"),
+	path("GetDetailedLayerList",service_view.GetDetailedLayerList.as_view(),name="GetDetailedLayerList"),
 	path("PostLayerApi",service_view.PostLayerApi.as_view(),name="PostLayerApi"),
 	path("UpdateLayerApi/<int:id>/",service_view.UpdateLayerApi.as_view(),name="UpdateLayerApi"),
 	path("GetLayer/<int:id>/",service_view.GetLayer.as_view(),name="GetLayer"),

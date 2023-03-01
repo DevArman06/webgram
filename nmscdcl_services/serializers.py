@@ -166,6 +166,12 @@ class UpdateLayerGroupSerializer(serializers.ModelSerializer):
 """
 Layer Serialziers
 """
+class GetShortLayerSerializer(serializers.ModelSerializer):
+
+	class Meta:
+		model=Layer
+		fields=("id","name")
+
 
 class GetLayerSerializer(serializers.ModelSerializer):
 
@@ -174,7 +180,7 @@ class GetLayerSerializer(serializers.ModelSerializer):
 		fields=("id","external","external_params","datastore","layer_group","name","title",\
 			"abstract","type","public","visible","queryable","cached","single_image","vector_tile",\
 			"allow_download","order","created_by","thumbnail","timeout","native_srs","native_extent",\
-			"latlong_extent","source_name","get_ol_params")
+			"latlong_extent","source_name")
 		# read_only_fields=fields
 
 
