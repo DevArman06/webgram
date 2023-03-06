@@ -728,7 +728,6 @@ class GetLayerList(APIView):
 	def get(self,request,*args,**kwargs):
 		# layer=Layer.objects.values("id","name")
 		layer=Layer.objects.all()
-		print(layer[0].get_ol_params)
 		data=GetShortLayerSerializer(layer,many=True).data
 
 		if data:
