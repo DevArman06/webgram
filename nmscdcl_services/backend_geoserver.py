@@ -14,6 +14,8 @@ from nmscdcl import settings
 from osgeo import osr
 import geoserver.catalog as gscat
 from django.utils.translation import gettext_lazy as _
+from . import rest_geoserver
+from nmscdcl_styling.models import LayerStyle,Style
 
 
 logger = logging.getLogger("nmscdcl")
@@ -39,9 +41,9 @@ class Geoserver(): #need to fixed
         self.name = name
         self.conf_url = master_node
         self.rest_url = master_node + "/rest"
-        self.gwc_url = master_node + "gwc/rest"
+        self.gwc_url = master_node + "/gwc/rest"
         # self.slave_node = slave_node
-        # self.rest_catalog = rest_geoserver.Geoserver(self.rest_url, self.gwc_url)
+        self.rest_catalog = rest_geoserver.Geoserver(self.rest_url, self.gwc_url)
         self.user = user
         self.password=password
         self.supported_types = (
@@ -54,18 +56,19 @@ class Geoserver(): #need to fixed
     def getGsconfig(self):
         return gscat.Catalog(self.rest_url, self.user, self.password, validate_ssl_certificate=False)
 
+    def reload_node(self, node_url):
+        try:
+            self.rest_catalog.reload(node_url, user=self.user, password=self.password) 
+            return True
+        
+        except Exception as e:
+            print(str(e))
+            return False
+
 
     def getGsLayers(self):
         catalog=self.getGsconfig()
         # resource=catalog.get_resources(workspaces="tiger")
-        # print(resource)
-        # # print(catalog.get_resource())
-        # print(resource[0].title,resource[0].native_name,resource[0].native_bbox)
-        # print(resource[4].title,resource[4].native_name,resource[4].native_bbox)
-        # print(resource[6].title,resource[6].native_name,resource[6].native_bbox)
-        # print(resource[8].title,resource[8].native_name,resource[8].native_bbox)
-        # print(resource[10].title,resource[10].native_name,resource[10].native_bbox)
-        # print(resource[15].title,resource[15].native_name,resource[15].native_bbox)
         layer_data=catalog.get_layers()
         return layer_data
 
@@ -73,6 +76,62 @@ class Geoserver(): #need to fixed
         catalog=self.getGsconfig()
         layer_data=catalog.get_layer(name=layer_name)
         return layer_data
+
+    def setLayerStyle(self,layer,style,is_default):
+        """
+        Set default style
+        """
+        try:
+            layer_name=layer.get_qualified_name()
+            print(layer_name)
+            catalog=self.getGsconfig()
+            gs_layer=catalog.get_layer(layer_name)
+            print(" i am adding the style")
+            self.addStyle(layer,layer_name,style)
+            print("i am after addd style")
+            if is_default:
+                gs_layer.default_style=style
+            print(gs_layer,"before catalog.save")
+            catalog.save(gs_layer)
+            return True
+
+        except Exception as e:
+            print(e)
+            print("issue in set layer style")
+            return False
+
+    def createOverwrittenStyle(self, name, data, overwrite):
+
+        """
+        Create new style or overwrite an existing file
+        """
+
+        try:
+            self.getGsconfig().create_style(name, data, overwrite=overwrite, workspace=None, style_format="sld10", raw=False)
+            return True
+        except Exception as e:
+            print("Got error %s while creating style"%(e))
+            return False
+
+    def create_style(self,name,data):
+        return self.createOverwrittenStyle(name,data,False)
+
+
+    def addStyle(self,layer,layer_name,name):
+        self.rest_catalog.add_style(layer_name,name,user=self.user,password=self.password)
+
+        if layer is not None:
+            style_list=[]
+            default_style=""
+            layer_styles=LayerStyle.objects.filter(layer=layer)
+            for layer_style in layer_styles:
+                if not layer_style.style.name.endswith("_tmp"):
+                    style_list.append(layer_style.style.name)
+                if layer_style.style.is_default:
+                    default_style=layer_style.style.name
+            print("update layer config")
+            self.rest_catalog.update_layer_style_configuration(layer_name,name,default_style,style_list,user=self.user,password=self.password)
+
 
 
 def __fieldmapping_sql(creation_mode, shp_path, shp_fields, table_name, host, port, db, schema, user, password):

@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'nmscdcl_auth.apps.NmscdclAuthConfig',
     'nmscdcl_core.apps.NmscdclCoreConfig',
     'nmscdcl_services.apps.NmscdclServicesConfig',
+    'nmscdcl_styling.apps.NmscdclStylingConfig',
     ########### PLUGINS ###########
     ########### DEPENDENCIES ###########
 ]

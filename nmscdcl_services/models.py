@@ -3,7 +3,7 @@ from django.db import models
 from django.conf import settings
 from .backend_postgis import Introspect
 from django.utils.crypto import get_random_string
-
+import geoserver.catalog as gscat
 # from .backend_geoserver import Geoserver
 
 # Create your models here.
@@ -222,25 +222,31 @@ class Layer(models.Model): #needed to be fix
 		i, params = self.datastore.get_db_connection()
 		return i, self.source_name, params.get('schema', 'public')
 
-	# @property
-	# def get_ol_params(self):
-	# 	obj={}
-	# 	obj_inner={}
-	# 	# print(self.datastore.workspace.server)
-	# 	server=self.datastore.workspace.server
-	# 	# gs=geographic_servers.get_instance().get_server_by_id(server_id)
-	# 	gs=Geoserver(server.id,server.default,server.name,server.user,server.password,server.frontend_url)
-	# 	layer_name=f"{self.datastore.workspace.name}:{self.name}"
-	# 	lyr=gs.getGsLayer(layer_name)
-	# 	obj["extent"]=list(lyr.resource.native_bbox)[:-1]
-	# 	obj["url"]=server.frontend_url+"/wms"
-	# 	obj["srs"]=lyr.resource.projection
-	# 	# obj["params"]["LAYERS"]=layer_name
-	# 	# obj["params"]["STYLES"]=lyr._get_default_style()
-	# 	# obj["params"]["TILED"]=False
-	# 	obj_inner["LAYERS"]=layer_name
-	# 	obj_inner["STYLES"]=f"{lyr._get_default_style()}"
-	# 	obj_inner["TILED"]=False
-	# 	obj["params"]=obj_inner
+	@property
+	def get_ol_params(self):
+		obj={}
+		obj_inner={}
+		# print(self.datastore.workspace.server)
+		server=self.datastore.workspace.server
+		# gs=geographic_servers.get_instance().get_server_by_id(server_id)
+		service_url=server.frontend_url + "/rest"
+		gs=gscat.Catalog(service_url,server.user,server.password,validate_ssl_certificate=False)
+		layer_name=f"{self.datastore.workspace.name}:{self.name}"
+		lyr=gs.get_layer(name=layer_name)
+		obj["extent"]=list(lyr.resource.native_bbox)[:-1]
+		obj["url"]=server.frontend_url+"/wms"
+		obj["srs"]=lyr.resource.projection
+		# obj["params"]["LAYERS"]=layer_name
+		# obj["params"]["STYLES"]=lyr._get_default_style()
+		# obj["params"]["TILED"]=False
+		obj_inner["LAYERS"]=layer_name
+		obj_inner["STYLES"]=f"{lyr._get_default_style().sld_name.strip()}"
+		obj_inner["TILED"]=False
+		obj["params"]=obj_inner
+		obj["serverType"]=server.type
 
-	# 	return obj
+		return obj
+
+	@property
+	def checked(self):
+		return False

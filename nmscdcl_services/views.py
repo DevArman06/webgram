@@ -726,7 +726,9 @@ class GetLayerList(APIView):
 	# permission_classes=[permissions.IsAuthenticated]
 	
 	def get(self,request,*args,**kwargs):
-		layer=Layer.objects.values("id","name")
+		# layer=Layer.objects.values("id","name")
+		layer=Layer.objects.all()
+		print(layer[0].get_ol_params)
 		data=GetShortLayerSerializer(layer,many=True).data
 
 		if data:
@@ -874,15 +876,24 @@ class GetGsLayerList(generics.GenericAPIView):
 		serializer=self.get_serializer(data=request.data)
 		if serializer.is_valid():
 			workspace=serializer.validated_data["workspace"]
-			gs=Geoserver(1,"default","geoserver","admin","geoserver","http://localhost:8080/geoserver","http://localhost:8080/geoserver")
+			gs=Geoserver(1,"default","geoserver","admin","geoserver","http://localhost:8080/geoserver")
 			gs_data=gs.getGsLayers()
+			gs_config=gs.getGsconfig()
+			gs_styles=gs_config.get_styles(workspaces=workspace)
+			print([i.sld_name for i in gs_styles ])
 			layers=[]
 			for lyr in gs_data:
 				if workspace in lyr.name:
+					print(lyr._get_alternate_styles(),"get alternate styles")
+					print(lyr._get_default_style(),"get default style")
 					layers.append({"extent":list(lyr.resource.native_bbox)[:-1],\
 						"url":"http://localhost:8080/geoserver/wms",\
 						"srs":lyr.resource.projection,\
-						"params":{"LAYERS":lyr.name,'VERSION': '1.1.1',"STYLES": '','TILED': False}})
+						"params":{"LAYERS":lyr.name,'VERSION': '1.1.1',"STYLES": '','TILED': False},
+						})
+				if lyr.name=="tiger:tiger_roads":
+					print([i.sld_name for i in lyr._get_alternate_styles()],"get alternate style")
+					print(lyr._get_default_style().sld_name,"get default style")
 			if layers:
 				return Response({
 					"message":"successfully fetched layers data",
