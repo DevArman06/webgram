@@ -60,6 +60,11 @@ if 'nmscdcl_services.apps.NmscdclServicesConfig' in settings.INSTALLED_APPS:
         path(NMSCDCL_URL_PREFIX+'services/',include('nmscdcl_services.urls'))
     ]
 
+if 'nmscdcl_styling.apps.NmscdclStylingConfig' in settings.INSTALLED_APPS:
+    urlpatterns +=[
+        path(NMSCDCL_URL_PREFIX+'styling/',include('nmscdcl_styling.urls'))
+    ]
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL,
                           document_root=settings.MEDIA_ROOT)

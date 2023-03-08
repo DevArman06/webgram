@@ -61,13 +61,16 @@ INSTALLED_APPS = [
     'nmscdcl_auth.apps.NmscdclAuthConfig',
     'nmscdcl_core.apps.NmscdclCoreConfig',
     'nmscdcl_services.apps.NmscdclServicesConfig',
+    'nmscdcl_styling.apps.NmscdclStylingConfig',
     ########### PLUGINS ###########
     ########### DEPENDENCIES ###########
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -105,6 +108,18 @@ WSGI_APPLICATION = 'nmscdcl.wsgi.application'
 #     'default': {
 #         'ENGINE': 'django.db.backends.sqlite3',
 #         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+#connection to hosted postgres server
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.contrib.gis.db.backends.postgis',
+#         'NAME': 'webgram2.0',
+#         'USER':'postgres',
+#         'PASSWORD':'admin',
+#         'HOST':'localhost',
+#         'PORT':'9021'
 #     }
 # }
 
@@ -151,7 +166,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+#Cross origin setup
+CORS_ALLOW_ALL_ORIGINS=True
 # LOGIN_URL = 'nmscdcl_authenticate_user'
 #NMSCDCL_AUTH_BACKEND = 'nmscdcl_plugin_oidc_mozilla'
 NMSCDCL_AUTH_BACKEND = 'nmscdcl_auth'
