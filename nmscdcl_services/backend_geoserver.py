@@ -136,6 +136,7 @@ class Geoserver(): #need to fixed
         try:
             self.rest_catalog.update_style(style_name,sld_body,user=self.user,password=self.password)
 
+            layer_name=layer.get_qualified_name()
             if layer is not None:
                 style_list=[]
                 default_style=""
@@ -145,7 +146,7 @@ class Geoserver(): #need to fixed
                         style_list.append(layer_style.style.name)
                     if layer_style.style.is_default:
                         default_style=layer_style.style.name
-                self.rest_catalog.update_layer_style_configuration(layer.name,style_name,default_style,style_list,user=self.user,password=self.password)
+                self.rest_catalog.update_layer_style_configuration(layer_name,style_name,default_style,style_list,user=self.user,password=self.password)
             return True
         except RequestError as e:
             print("error in updating style ",style_name)
