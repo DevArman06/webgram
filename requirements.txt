@@ -11,7 +11,7 @@ djangorestframework-gis==1.0
 djangorestframework-simplejwt==5.2.2
 drf-yasg==1.21.5
 future==0.18.3
-GDAL @ file:///D:/Projects%20BGIS/Dependecies/GDAL-3.4.3-cp310-cp310-win_amd64.whl
+# GDAL @ file:///D:/Projects%20BGIS/Dependecies/GDAL-3.4.3-cp310-cp310-win_amd64.whl
 geoserver-restconfig==2.0.8
 gisdata==0.5.4
 idna==3.4

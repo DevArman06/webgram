@@ -27,7 +27,13 @@ from urllib.request import urlopen
 from nmscdcl.settings import DEFAULT_DB_STRUCTURE
 from .backend_geoserver import Geoserver
 import json
-
+from rest_framework.permissions import IsAuthenticated
+from nmscdcl_auth.models import User
+from .serializers import *
+import io
+import shutil
+import zipfile
+from nmscdcl import settings
 # Create your views here.
 
 def getprj(shp_path):
@@ -271,12 +277,13 @@ class PostWorkspaceApi(generics.GenericAPIView):
 				server=serializer.validated_data["server"]
 			except Exception as e:
 				return Response({
-					"message":"server with id %s does not exists"%(server_id),
+					"message":"server with id does not exists",
 					"status":"error"
 					})
+			
 			server_url=server.frontend_url
 			services_dict={
-			"uri":server.frontend_url+"/"+name,
+			"uri":server.frontend_url+"/"+ name,
 			"wms_endpoint":server.getWmsEndpoint(workspace=name),
 			"wfs_endpoint":server.getWfsEndpoint(workspace=name),
 			"wcs_endpoint":server.getWcsEndpoint(workspace=name),
@@ -408,7 +415,7 @@ class GetDatastoreList(APIView):
 			return Response({
 			"message":"data fetched successfully",
 			"status":"success",
-			"data":data
+			"data": data
 			})
 		return Response({
 			"message":"there is no datastore data avialable",
@@ -793,6 +800,7 @@ class UpdateLayerApi(generics.GenericAPIView):
 			"status":"error",
 			"error":serializer.errors
 			})
+	
 	def patch(self,request,id,*args,**kwargs):
 		try:
 			instance=Layer.objects.get(pk=id)
@@ -894,3 +902,86 @@ class GetGsLayerList(generics.GenericAPIView):
 			"status":"error",
 			"error":serializer.errors
 			})
+	
+
+
+
+class PostShapeFile(generics.GenericAPIView):
+    serializer_class = UploadShapeFileSerializer 
+    permission_classes = [IsAuthenticated]    
+    parser_classes = [MultiPartParser]
+
+    def get_new_media_path(self, media_path):
+        index = 1
+        while os.path.exists(f"{media_path}_{index}"):
+            index += 1
+        return f"{media_path}_{index}"
+
+    def post(self, request, format=None):
+
+        if 'shape_file' not in request.FILES:
+            return Response({"status": "error", 
+                             "message": "No file uploaded."} , status=400)
+        
+        zip_file = request.FILES['shape_file']
+        zip_filename = zip_file.name
+        if not zip_filename.endswith('.zip'):
+            return Response({"status": "error" ,
+                             "message" : f" {zip_filename} - Uploaded File is not a zip file" })
+
+        media_path = os.path.join(settings.MEDIA_ROOT/'shapefiles', zip_filename[:-4])
+
+        # Check if media folder for extracted files already exists
+        while os.path.exists(media_path):
+            choice = request.data.get('choice')
+            if choice == 'Overwrite':
+                shutil.rmtree(media_path)
+            elif choice == 'New':
+                media_path = self.get_new_media_path(media_path)
+            else:
+                return Response({'message': 'Invalid choice. Please select Overwrite or New.'})
+
+        # Extract the ZIP file to the media folder
+        with zipfile.ZipFile(zip_file, 'r') as zip_ref:
+            zip_ref.extractall(media_path)
+        folder_name = media_path.split('\\')[-1]
+        
+        serializer = storeshapefilePathSerializer(data = {'folder_name' : folder_name})
+        if serializer.is_valid():
+            serializer.save(user = request.user)
+
+        return Response({'status':'success',
+                        'message': f'{zip_filename} uploaded and extracted successfully.'})
+    
+
+    
+class GetUploadedShapeFile(APIView):
+    def get(self, request):
+        try:
+            instance = ShapeFiles.objects.all()
+        except ShapeFiles.DoesNotExist as e:
+            return Response({"status": "error", "message":'No data found'},status=400)
+        
+        serializer = GetShapeFileSerializer(instance , many = True).data
+        return Response({'status':'success',
+                        'message': 'data fetched successfully',
+                        'data': serializer})
+
+
+
+class DeleteShapeFolder(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, folder_name, format=None):
+        media_path = os.path.join(settings.MEDIA_ROOT, 'shapefiles', folder_name)
+        folder_name= media_path.split('\\')[-1]
+        if os.path.exists(media_path):
+            shutil.rmtree(media_path)
+            ShapeFiles.objects.filter(folder_name=folder_name).delete()
+            return Response({
+                'status': 'success' , 
+                'message': 'Folder deleted successfully.'})
+        else:
+            return Response({
+                'status': 'error' , 
+                'message': f'{folder_name} - This folder not found.'} , status=400)

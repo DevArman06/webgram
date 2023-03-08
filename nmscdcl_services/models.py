@@ -3,7 +3,9 @@ from django.db import models
 from django.conf import settings
 from .backend_postgis import Introspect
 from django.utils.crypto import get_random_string
-
+from nmscdcl_auth.models import User
+import json
+from django.db.models.signals import post_save
 # from .backend_geoserver import Geoserver
 
 # Create your models here.
@@ -244,3 +246,20 @@ class Layer(models.Model): #needed to be fix
 	# 	obj["params"]=obj_inner
 
 	# 	return obj
+
+class ShapeFiles(models.Model):
+    user = models.ForeignKey(User, related_name='shape_files', on_delete=models.CASCADE)
+    folder_name = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return self.folder_name
+    
+
+class ApiHit(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    url = models.CharField(max_length=255)
+    count = models.PositiveIntegerField(default=0)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+	    return self.url+ ' - ' + self.user.username
+    

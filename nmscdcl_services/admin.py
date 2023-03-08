@@ -8,3 +8,6 @@ admin.site.register(Layer)
 admin.site.register(Workspace)
 admin.site.register(Datastore)
 admin.site.register(Server)
+admin.site.register(ShapeFiles)
+admin.site.register(ApiHit)
+

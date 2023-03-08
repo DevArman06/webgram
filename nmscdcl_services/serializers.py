@@ -245,3 +245,21 @@ class UpdateLayerSerializer(serializers.ModelSerializer):
 
 class GetGsLayerSerializer(serializers.Serializer):
 	workspace=serializers.CharField(max_length=50)
+
+
+class UploadShapeFileSerializer(serializers.Serializer):
+    shape_file = serializers.FileField(required = True)
+    choice = serializers.CharField(max_length=50 , required = True)
+
+class GetShapeFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShapeFiles
+        fields = ('user' , 'folder_name')
+
+class storeshapefilePathSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShapeFiles
+        fields = ('folder_name' , )
+
+class DeleteShapeFileSerializer(serializers.Serializer):
+    folder_name = serializers.CharField(max_length=255 , required=True )

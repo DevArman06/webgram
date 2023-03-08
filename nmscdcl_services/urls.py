@@ -2,6 +2,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.utils.module_loading import import_string
 from . import views as service_view
+from .views import *
 
 urlpatterns=[
 	path("postshp/",service_view.Postshp.as_view()),
@@ -45,4 +46,8 @@ urlpatterns=[
 
 	#Gs Layers
 	path("GetGsLayerList",service_view.GetGsLayerList.as_view(),name="GetGsLayerList"),
+    
+	path('PostShapeFile', PostShapeFile.as_view(), name=' Upload ZIP file in database'),
+    path('GetShapeFiles', GetUploadedShapeFile.as_view(), name=' Get ZIP file'),
+    path('DeleteshapeFolder/<str:folder_name>/', DeleteShapeFolder.as_view()),
 ]

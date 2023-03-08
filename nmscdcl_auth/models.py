@@ -35,6 +35,7 @@ class User(AbstractBaseUser,PermissionsMixin):
 	is_delete=models.BooleanField(default=False)
 	date_joined=models.DateField(auto_now_add=True)
 	date_updated=models.DateField(auto_now=True)
+	api_hits = models.IntegerField(default=0)
 
 
 	USERNAME_FIELD="username"

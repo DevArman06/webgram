@@ -14,6 +14,7 @@ from pathlib import Path
 from datetime import timedelta
 import os
 from typing import Final
+# from nmscdcl_services.CustomeMiddelware import ApiHitsMiddleware
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -68,10 +69,12 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'nmscdcl_services.middelwares.ApiHitsMiddleware',
 ]
 
 ROOT_URLCONF = 'nmscdcl.urls'
@@ -111,7 +114,7 @@ DATABASES = {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': 'nmscdcl',
         'USER':'postgres',
-        'PASSWORD':'bgis@123',
+        'PASSWORD':'admin',
         'HOST':'localhost',
         'PORT':'5432'
     }
@@ -305,7 +308,7 @@ STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 
 # Path where media is stored
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR /"media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
