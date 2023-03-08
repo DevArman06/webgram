@@ -31,4 +31,20 @@ def create_style(style_name,style_title,sld,is_default,layer,gs,is_preview=False
 		if gs.create_style(style_name,sld_body):
 			gs.setLayerStyle(layer,style_name,is_default)
 			return style
- 	
+
+
+
+def update_style(layer,style_name,sld,gs,style,is_default,is_preview=False):
+
+	is_default=utils.set_default_style(layer,gs,style,is_preview,is_default)
+
+	sld_body=utils.encode_xml(sld)
+
+	if is_preview:
+		return gs.createOverwrittenStyle(style_name,sld_body,True)
+
+	else:
+		 if gs.updateStyle(layer,style_name,sld_body):
+		 	return gs.setLayerStyle(layer,style_name,is_default)
+		 else:
+		 	print("there is some error updating the style ",style_name)

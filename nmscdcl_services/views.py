@@ -826,7 +826,6 @@ class GetLayer(APIView):
 
 		try:
 			instance=Layer.objects.get(pk=id)
-			print(instance)
 		except Layer.DoesNotExist as e:
 			return Response({
 				"message":"layer with id %s does not exists"%(id),

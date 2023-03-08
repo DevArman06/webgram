@@ -108,6 +108,18 @@ WSGI_APPLICATION = 'nmscdcl.wsgi.application'
 #     }
 # }
 
+#connection to hosted postgres server
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.contrib.gis.db.backends.postgis',
+#         'NAME': 'webgram2.0',
+#         'USER':'postgres',
+#         'PASSWORD':'admin',
+#         'HOST':'localhost',
+#         'PORT':'9021'
+#     }
+# }
+
 #connection to local postgres server
 DATABASES = {
     'default': {

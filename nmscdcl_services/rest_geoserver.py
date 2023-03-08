@@ -38,7 +38,6 @@ class Geoserver():
 
 	def add_style(self,layer,style_name,user=None,password=None):
 		url=self.get_service_url()+"/layers/"+layer+"/styles"
-		print(url)
 
 		if user and password:
 			auth=(user,password)
@@ -49,16 +48,14 @@ class Geoserver():
 		data_xml=f"<style><name>{style_name}</name></style>"
 
 		req=self.get_session().post(url,data=data_xml,headers=headers,auth=auth)
-		print(req,"this is the request in add_style")
-		print(req.status_code,"status code")
 		if req.status_code==201:
 			return True
-		print(req.content)
-		# raise FailedRequestError(req.status_code,req.content)
+		raise FailedRequestError(req.status_code,req.content)
 
 
 	def get_layer_style_configuration(self,layer,user=None,password=None):
 		url=self.get_gwc_url()+"/layers/"+layer+".xml"
+		print(url)
 		if user and password:
 			auth=(user,password)
 		else:
@@ -102,6 +99,22 @@ class Geoserver():
 			return True
 		raise UploadError(req.status_code,req.text)
 
+
+	def update_style(self,style_name,sld_body,user=None,password=None):
+		url=self.service_url + "/styles/" + style_name + ".sld"
+
+		if user and password:
+			auth=(user,password)
+		else:
+			auth=self.session.auth
+
+		headers={"content-type":"application/vnd.ogc.sld+xml"}
+
+		req=self.get_session().put(url,data=sld_body,headers=headers,auth=auth)
+
+		if req.status_code==200:
+			return True
+		raise UploadError(req.status_code,req.text)
 
 
 class RequestError(Exception):

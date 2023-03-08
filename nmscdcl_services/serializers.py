@@ -170,7 +170,7 @@ class GetShortLayerSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model=Layer
-		fields=("id","name","get_ol_params","checked")
+		fields=("id","title","get_ol_params","checked")
 
 
 class GetLayerSerializer(serializers.ModelSerializer):

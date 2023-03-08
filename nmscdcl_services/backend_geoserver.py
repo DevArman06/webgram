@@ -16,6 +16,7 @@ import geoserver.catalog as gscat
 from django.utils.translation import gettext_lazy as _
 from . import rest_geoserver
 from nmscdcl_styling.models import LayerStyle,Style
+from .rest_geoserver import RequestError
 
 
 logger = logging.getLogger("nmscdcl")
@@ -88,7 +89,7 @@ class Geoserver(): #need to fixed
             gs_layer=catalog.get_layer(layer_name)
             print(" i am adding the style")
             self.addStyle(layer,layer_name,style)
-            print("i am after addd style")
+            print("i am after add style")
             if is_default:
                 gs_layer.default_style=style
             print(gs_layer,"before catalog.save")
@@ -129,9 +130,31 @@ class Geoserver(): #need to fixed
                     style_list.append(layer_style.style.name)
                 if layer_style.style.is_default:
                     default_style=layer_style.style.name
-            print("update layer config")
             self.rest_catalog.update_layer_style_configuration(layer_name,name,default_style,style_list,user=self.user,password=self.password)
 
+    def updateStyle(self,layer,style_name,sld_body):
+        try:
+            self.rest_catalog.update_style(style_name,sld_body,user=self.user,password=self.password)
+
+            if layer is not None:
+                style_list=[]
+                default_style=""
+                layer_styles=LayerStyle.objects.filter(layer=layer)
+                for layer_style in layer_styles:
+                    if not layer_style.style.name.endswith("_tmp"):
+                        style_list.append(layer_style.style.name)
+                    if layer_style.style.is_default:
+                        default_style=layer_style.style.name
+                self.rest_catalog.update_layer_style_configuration(layer.name,style_name,default_style,style_list,user=self.user,password=self.password)
+            return True
+        except RequestError as e:
+            print("error in updating style ",style_name)
+            print(e.get_detailed_message())
+        except Exception:
+            print("error in updating style ",style_name)
+            return False
+
+        
 
 
 def __fieldmapping_sql(creation_mode, shp_path, shp_fields, table_name, host, port, db, schema, user, password):
